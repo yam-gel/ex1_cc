@@ -37,7 +37,7 @@ int main()
 	socklen_t add_len=256;
 
 	//sender socket addres
-	char IP[200] = "127.50.0.1";
+	char IP[200] = "127.0.0.1";
 	int port1 = 6342, port2=6343;
 
 	my_addr_s.sin_family = AF_INET;
@@ -54,16 +54,17 @@ int main()
 
 	printf("sender socket: %s port %d\n", IP, port1);
 	printf("receiver socket: %s port %d\n", IP, port2);
-	char MSG[256];
+	//char MSG[256];
+	int MSG=0;
 	SOCKET client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
-	int recieved = recv(client1, MSG, sizeof(MSG), 0);
-
-	printf("%s\n", inet_ntoa(sender_addr.sin_addr));
+	int recieved = recv(client1, &MSG, sizeof(MSG), 0);
+	
+	printf("%d %s\n",MSG, inet_ntoa(sender_addr.sin_addr));
 	
 	//reciever socket address
 	my_addr_r.sin_family = AF_INET;
-	my_addr_r.sin_addr.s_addr = inet_addr("127.50.0.1");
-	my_addr_r.sin_port = htons(6343);
+	my_addr_r.sin_addr.s_addr = inet_addr("127.0.0.1");
+	my_addr_r.sin_port = htons(port2);
 	connect_status = bind(s_receiver, (SOCKADDR*)&my_addr_r, sizeof(my_addr_r));
 	connect_status = listen(s_receiver, MAX_CLIENTS);
 	//check connection success
@@ -72,7 +73,7 @@ int main()
 		printf("connection failed 2");
 		return -1;
 	}
-	
+	//comment
 
 	
 
@@ -80,7 +81,7 @@ int main()
 	
 	
 	SOCKET client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
-	int sent = send(client2, MSG, sizeof(MSG), 0);
+	int sent = send(client2, &MSG, sizeof(MSG), 0);
 	
 	
 

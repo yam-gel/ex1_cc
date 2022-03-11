@@ -11,6 +11,17 @@
 
 
 #pragma comment (lib, "ws2_32.lib")
+//int decoder(int block)
+//{
+//	int result = 0, mask=0;
+//	int parities[4];
+//	for (int i = 0; i < 5; i++)
+//	{
+//		parities[i] = block & mask;
+//		mask <<= 1;
+//		result
+//	}
+//}
 
 int main(int argc, char* argv[])
 {
@@ -43,11 +54,12 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	char MSG[256];
-	int recieved = recv(s, MSG, 256, 0);
+	//char MSG[256];
+	int MSG=0;
+	int recieved = recv(s, &MSG, 256, 0);
 
 	if (recieved)
-		printf("%s", MSG);
+		printf("%d", MSG);
 
 	int close_status = closesocket(s);
 	WSACleanup();
