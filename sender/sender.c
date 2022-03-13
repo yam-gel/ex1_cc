@@ -1,15 +1,60 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include <stdio.h>
-
 #include <stdlib.h>
-
 //#include <Windows.h>
 #include <winsock2.h>
-
-
-
 #pragma comment (lib, "ws2_32.lib")
+
+
+//*********************************************************************
+//Function : Recive 26bits int, return 31bit Hamming code
+//*********************************************************************
+ 
+int num2hamming(int num){
+	int num_b[26]={0};
+	int code_b[31]={0};
+	int c=1,res=0,exp=0;
+	int code=0;
+	for (int i=0;i<26;i++){
+		num_b[i]=num%2;
+		num>>=1;
+	}
+
+	for (int i = 1; i < 32; i++) {
+		if (i == c) {
+			c *= 2;
+			exp++;
+			continue;
+		}
+		else code_b[i - 1] = num_b[i-1-exp];
+	}
+	exp = 0;
+	c = 1;
+	for (int i=1;i<32;i++){
+		if (i==c){
+			res=0;
+			for (int j=1;j<32;j++){
+				if ((((j & i) >> exp) & 1) == 1) 
+					res ^= code_b[j-1];
+			}
+			code_b[i-1]=res;
+			c*=2;
+			exp++;
+		}
+	}
+
+	for (int i=31;i>=0;i--){
+		code <<= 1;
+		code+=code_b[i];
+	}
+	return code;
+
+}
+//***********************************************************************
+
+
 void ReadFile_1(SOCKET s)
 {
 	FILE* fp = NULL;
@@ -33,8 +78,7 @@ void ReadFile_1(SOCKET s)
 }
 
 int main(int argc, char* argv[])
-{
-	
+{/*
 	WSADATA wsaData;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
@@ -67,6 +111,9 @@ int main(int argc, char* argv[])
 	
 	int close_status = closesocket(s);
 	WSACleanup();
-	
+
 	return 0;
+	*/
+	printf("%0d\n", 0x7FFFFFFF);
+	printf("26_ones coded into : %0d", num2hamming(0b11111111111111111111111111));
 }
