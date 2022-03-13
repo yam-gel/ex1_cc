@@ -10,13 +10,32 @@
 
 #define MAX_CLIENTS 2
 
-
 #pragma comment (lib, "ws2_32.lib")
+//*********************************************************************
+//Function : Recive 31bits int , and flip bit with n/635536 probabilty
+//*********************************************************************
+int num_after_rand_noise(int num, int seed, int n) {
+	int flip_mask = 1;
+	int num_noised=num;
+	int noise_prob = 0;
+	int count = 0;
+	srand(seed);
+	for (int i = 0; i < 31; i++) {
+		noise_prob = rand() % (65536/2);
+		//printf("%0d\n", noise_prob);
+		if (noise_prob <= (n/2)) {
+			num_noised ^= flip_mask;
+			printf("%0d\n", noise_prob);
+			count++;
+		}
+		flip_mask <<= 1;
+	}
+	printf("%0d", count);
+}
+//*********************************************************************
 
-
-int main()
-{
-
+int main(int argc, char* argv[])
+{	
 	WSADATA wsaData;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
@@ -75,21 +94,16 @@ int main()
 	}
 	//comment
 
-	
-
-
-	
-	
 	SOCKET client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
 	int sent = send(client2, &MSG, sizeof(MSG), 0);
 	
-	
-
 	int close_status = closesocket(s_sender);
 	close_status = closesocket(s_receiver);
 	close_status = closesocket(client1);
 	close_status = closesocket(client2);
 	
 	WSACleanup();
+	
+
 	return 0;
 }
