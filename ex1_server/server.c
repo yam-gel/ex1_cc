@@ -34,6 +34,27 @@ int num_after_rand_noise(int num, int seed, int n) {
 }
 //*********************************************************************
 
+//*********************************************************************
+//Function : Recieve 31 Bytes of data and writes it to buffer
+//*********************************************************************
+void Write_to_buffer(SOCKET client, char *buffer)
+{
+	char buffer1[31];
+	int recieved = recv(client, buffer, 31, 0);
+	
+	//while (recieved != 0)
+	//{
+	//	printf("recieved %d Bytes, %c\n", recieved, buffer[0]);
+	//	//buffer1 = buffer1+ recieved;
+	//	recieved = recv(client, buffer, 31, 0);
+	//}
+
+	//********* I am not sure if we need to add loop of recieve??????????
+}
+
+
+//*********************************************************************
+
 int main(int argc, char* argv[])
 {	
 	WSADATA wsaData;
@@ -76,9 +97,18 @@ int main(int argc, char* argv[])
 	//char MSG[256];
 	int MSG=0;
 	SOCKET client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
-	int recieved = recv(client1, &MSG, sizeof(MSG), 0);
-	
-	printf("%d %s\n",MSG, inet_ntoa(sender_addr.sin_addr));
+	/// START OF CHANGES TO TRY AND READ TO FILE
+	//int recieved = recv(client1, &MSG, sizeof(MSG), 0);
+	char buffer[31];
+	Write_to_buffer(client1, buffer);
+
+	for (int i = 0; i < 31; i++)
+	{
+		printf("%c", buffer[i]);
+	}
+
+	//printf("%d %s\n",MSG, inet_ntoa(sender_addr.sin_addr));
+	//END OF CHANGES
 	
 	//reciever socket address
 	my_addr_r.sin_family = AF_INET;
@@ -95,7 +125,7 @@ int main(int argc, char* argv[])
 	//comment
 
 	SOCKET client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
-	int sent = send(client2, &MSG, sizeof(MSG), 0);
+	int sent = send(client2, &buffer, sizeof(buffer), 0);
 	
 	int close_status = closesocket(s_sender);
 	close_status = closesocket(s_receiver);

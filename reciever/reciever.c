@@ -60,10 +60,38 @@ int decoder(int block)
 	return(result);
 }
 
+//*********************************************************************
+//Function : Recieve 31 Bytes block and write it to buffer
+//*********************************************************************
+int Write_to_buffer(SOCKET client, char *buffer)
+{
+	char* head = buffer;
+	int total_recieved=0, recieved = recv(client, buffer, 31, 0);
+	while (recieved != 0 && recieved<31)
+	{
+		total_recieved += recieved;
+		head += recieved;
+		recieved = recv(client, head, sizeof(head), 0);
+	}
+
+	for (int i = 0; i < 31; i++)
+	{
+		printf("%c ", buffer[i]);
+	}
+	if (total_recieved != 31)
+		printf("ERROR  %d Bytes were sent!!!", recieved);
+	return total_recieved;
+}
+
+
+//*********************************************************************
+
+
 int main(int argc, char* argv[])
 {
 
 	WSADATA wsaData;
+	int recieved_counter=0;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
 	{
@@ -91,12 +119,18 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	//char MSG[256];
-	int MSG=0;
-	int recieved = recv(s, &MSG, 256, 0);
-
-	if (recieved)
-		printf("%d", MSG);
+	/// ****THIS IS TEMPORARY TO CHECK THE SENDING FUNC ****///
+	char buffer[31];
+	FILE* fp = NULL;
+	fp = fopen("output.txt", "w");
+	recieved_counter += Write_to_buffer(s, buffer);
+	printf("recieved message is: \n");
+	for (int i = 0; i < 31; i++)
+	{
+		printf("%c", buffer[i], i);
+	}
+	fwrite(buffer, 1, sizeof(buffer), fp);
+	/// *******************************************
 
 	int close_status = closesocket(s);
 	WSACleanup();
