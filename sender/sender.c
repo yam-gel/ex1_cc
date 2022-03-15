@@ -78,7 +78,7 @@ void ReadFile_1(SOCKET s)
 }
 
 int main(int argc, char* argv[])
-{/*
+{
 	WSADATA wsaData;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
@@ -113,7 +113,6 @@ int main(int argc, char* argv[])
 	WSACleanup();
 
 	return 0;
-	*/
-	printf("%0d\n", 0x7FFFFFFF);
-	printf("26_ones coded into : %0d", num2hamming(0b11111111111111111111111111));
+	
+	
 }

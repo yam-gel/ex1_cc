@@ -11,17 +11,54 @@
 
 
 #pragma comment (lib, "ws2_32.lib")
-//int decoder(int block)
-//{
-//	int result = 0, mask=0;
-//	int parities[4];
-//	for (int i = 0; i < 5; i++)
-//	{
-//		parities[i] = block & mask;
-//		mask <<= 1;
-//		result
-//	}
-//}
+// 
+//This functions input is encoded block, the function returns the decoded block in 26 LSBs of int 
+//
+int decoder(int block)
+{
+	int array_of_bits[32] = { 0 };
+	int mask = 1, error_index=0;
+	//build array of 31 bits
+	for (int i = 1; i < 32; i++)
+	{
+		if (block & mask)
+			array_of_bits[i] = 1;
+		mask <<= 1;
+	}
+	int pairities_index[5] = { 1,2,4,8,16 }, counter=0;
+	//find index of error if exist
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 1; j < 32; j++)
+		{
+			if (j & pairities_index[i] && array_of_bits[j]==1)
+				counter  ^= 1;
+		}
+		if (counter == 1)
+			error_index += pairities_index[i];
+		counter = 0;
+	}
+	printf("\n%d",error_index);
+	if (error_index != 0)
+	{
+		array_of_bits[error_index] ^= 1; //flip error bit
+		printf("error detected in bit number %d", error_index);
+	}
+	//build array of 31 bits
+	int marker = 1, power = 0, result=0;
+	for (int i = 1; i < 32; i++)
+	{
+		if (i == marker)
+			marker <<= 1;
+		else
+		{
+			result += array_of_bits[i] << power;
+			power++;
+		}
+	}
+	printf("\n%d", result);
+	return(result);
+}
 
 int main(int argc, char* argv[])
 {
@@ -64,4 +101,5 @@ int main(int argc, char* argv[])
 	int close_status = closesocket(s);
 	WSACleanup();
 	return 0;
+	
 }
