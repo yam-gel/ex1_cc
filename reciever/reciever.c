@@ -79,7 +79,7 @@ int Write_to_buffer(SOCKET client, char *buffer)
 		printf("%c ", buffer[i]);
 	}
 	if (total_recieved != 31)
-		printf("ERROR  %d Bytes were sent!!!", recieved);
+		printf("ERROR  %d Bytes were sent!!!", total_recieved);
 	return total_recieved;
 }
 
