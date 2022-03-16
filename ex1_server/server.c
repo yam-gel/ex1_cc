@@ -12,7 +12,7 @@
 
 #pragma comment (lib, "ws2_32.lib")
 //*********************************************************************
-//Function : Recive 31bits int , and flip bit with n/635536 probabilty
+//Function : Recive 31bits int , and flip bit with n/635536 probabilty ######CHANGED TO BLOCK
 //*********************************************************************
 int num_after_rand_noise(int num, int seed, int n) {
 	int flip_mask = 1;
@@ -33,6 +33,25 @@ int num_after_rand_noise(int num, int seed, int n) {
 	printf("%0d", count);
 }
 //*********************************************************************
+// Function : flips bit with probablity of n/(2^16)
+//*********************************************************************
+void add_random_noise(char *chunk,int seed, int n) {
+	int noise_prob = 0;
+	int count = 0;
+	int flip_mask = 1;
+	srand(seed);
+	for (int i = 0; i < 31; i++) {
+		for (int j = 0; j < 8; j++) {
+			noise_prob= (rand() % (65536 / 2));
+			if (noise_prob <= (n / 2)) {
+				*(chunk + i) ^= (flip_mask << j);
+			}
+		}
+	}
+}
+
+//*********************************************************************
+
 
 int main(int argc, char* argv[])
 {	
@@ -75,12 +94,12 @@ int main(int argc, char* argv[])
 	printf("receiver socket: %s port %d\n", IP, port2);
 	//char MSG[256];
 	int MSG=0;
-	SOCKET client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
-	int recieved = recv(client1, &MSG, sizeof(MSG), 0);
+	//SOCKET client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
+	//int recieved = recv(client1, &MSG, sizeof(MSG), 0);
 	
-	printf("%d %s\n",MSG, inet_ntoa(sender_addr.sin_addr));
+	//printf("%d %s\n",MSG, inet_ntoa(sender_addr.sin_addr));
 	
-	//reciever socket address
+	//reciever socket addresss
 	my_addr_r.sin_family = AF_INET;
 	my_addr_r.sin_addr.s_addr = inet_addr("127.0.0.1");
 	my_addr_r.sin_port = htons(port2);
@@ -94,9 +113,16 @@ int main(int argc, char* argv[])
 	}
 	//comment
 
-	SOCKET client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
-	int sent = send(client2, &MSG, sizeof(MSG), 0);
-	
+	//SOCKET client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
+	//int sent = send(client2, &MSG, sizeof(MSG), 0);
+	SOCKET client1;
+	SOCKET client2;
+	while (1) {
+		client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
+		int recieved = recv(client1, &MSG, sizeof(MSG), 0);
+		client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
+		int sent = send(client2, &MSG, sizeof(MSG), 0);
+	}
 	int close_status = closesocket(s_sender);
 	close_status = closesocket(s_receiver);
 	close_status = closesocket(client1);
