@@ -8,6 +8,55 @@
 #pragma comment (lib, "ws2_32.lib")
 
 
+
+//function : Adds hamming into each elemnet of the array
+//***********************************************************************
+void add_hamming(int* arr) {
+	for (int i = 0; i < 8; i++) {
+		*(arr + i) = num2hamming(*(arr + i));
+	}
+	printf("CHECKK");
+}
+//*******************************************************************************
+//function : reverse char
+// //*******************************************************************************
+unsigned char reverse_char(unsigned char ch) {
+	unsigned char reversed = 0;
+	for (int i = 0; i < 8; i++) {
+		reversed <<= 1;
+		reversed += (ch % 2);
+		ch /= 2;
+	}
+	return reversed;
+}
+//*******************************************************************************
+//function : fill batch without redundency
+//*******************************************************************************
+fill_batch(char* batch, int* arr) {
+	int counter = 0;
+	char curr = 0;
+	int index = 0;
+	int i, j;
+	for (i = 0; i < 31; i++) {
+		for (j = 0; j < 8; j++) {
+			if (counter < 31) { //TODO: CHECK IF NEEDS TO BE 31?
+				curr <<= 1;
+				curr += (arr[index] % 2);
+				arr[index] /= 2;
+				counter++;
+			}
+			else {
+				counter = 0;
+				index++;
+				j--;
+			}
+		}
+
+		*(batch + 30 - i) = (reverse_char(curr));
+		//*(batch + i) = curr;
+	}
+}
+
 //*********************************************************************
 //Function : Recive 26bits int, return 31bit Hamming code
 //*********************************************************************
@@ -53,6 +102,17 @@ int num2hamming(int num){
 
 }
 //***********************************************************************
+
+//***********************************************************************
+// function : Splits the buffer into 4 pieces of 26bits and assigns it to the relevant half of the array
+//***********************************************************************
+void split_buffer(char* buffer, int* arr, int half) {
+	*arr = ((int)buffer[0] << 18) + ((int)buffer[1] << 10) + ((int)buffer[2] << 2) + (((int)buffer[3] & 0xc0) >> 6);
+	*(arr + 1 + 4 * half) = (((int)buffer[3] & 0x3f) << 20) + ((int)buffer[4] << 12) + ((int)buffer[5] << 4) + (((int)buffer[6] & 0xf0) >> 4);
+	*(arr + 2 + 4 * half) = (((int)buffer[6] & 0x0f) << 22) + ((int)buffer[7] << 14) + ((int)buffer[8] << 6) + (((int)buffer[9] & 0xfc) >> 2);
+	*(arr + 3 + 4 * half) = (((int)buffer[9] & 0x03) << 24) + ((int)buffer[10] << 16) + ((int)buffer[11] << 8) + (int)buffer[12];
+}
+//************************************
 
 //*********************************************************************
 //Function : Recieve socket and a buffer of 31B and sends it to the line and returns the number of sent Bytes
@@ -101,6 +161,38 @@ int Send31Bytes(SOCKET s, char *buffer)
 	//}
 }
 //***********************************************************************
+
+
+
+//*******************************************************************************
+//function : Reads file in 13bytes chunks, splits, code to hamming,and sends it 
+//*******************************************************************************
+void file_reader(FILE* fp, SOCKET s) {
+	unsigned char buffer[13];
+	unsigned char batch[31];
+	int splitted[8] = { 0 };
+	while (!feof(fp)) {
+		for (int i = 0; i < 2; i++) {
+			fread(buffer, 1, sizeof(buffer), fp);
+			split_buffer(buffer, splitted, i);
+		}
+		add_hamming(splitted);
+		fill_batch(batch, splitted);
+		//ADD SEND
+	}
+}
+
+//*******************************************************************************
+//function : TEST 1 BATCH 
+//*******************************************************************************
+void test_1() {
+	int splitted[8] = { 1,1,1,1,1,1,1,1 };
+	//int try_0[8] = {0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff};
+	unsigned char batch[31];
+	add_hamming(splitted);
+	fill_batch(batch, splitted);
+	printf("DONE");
+}
 
 int main(int argc, char* argv[])
 {

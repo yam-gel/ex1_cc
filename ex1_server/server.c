@@ -35,6 +35,25 @@ int num_after_rand_noise(int num, int seed, int n) {
 //*********************************************************************
 
 //*********************************************************************
+// Function : flips bit with probablity of n/(2^16)
+//*********************************************************************
+void add_random_noise(char* chunk, int seed, int n) {
+	int noise_prob = 0;
+	int count = 0;
+	int flip_mask = 1;
+	srand(seed);
+	for (int i = 0; i < 31; i++) {
+		for (int j = 0; j < 8; j++) {
+			noise_prob = (rand() % (65536 / 2));
+			if (noise_prob <= (n / 2)) {
+				*(chunk + i) ^= (flip_mask << j);
+			}
+		}
+	}
+}
+
+
+//*********************************************************************
 //Function : Recieve 31 Bytes of data and writes it to buffer
 //*********************************************************************
 void Write_to_buffer(SOCKET client, char *buffer)
