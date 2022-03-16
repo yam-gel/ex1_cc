@@ -125,22 +125,11 @@ void file_reader(FILE *fp, SOCKET s) {
 		//ADD SEND
 	}
 }
-//*******************************************************************************
-//function : TEST 1 BATCH 
-//*******************************************************************************
-void test_1() {
-	int splitted[8] = { 1,1,1,1,1,1,1,1 };
-	//int try_0[8] = {0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff};
-	unsigned char batch[31];
-	add_hamming(splitted);
-	fill_batch(batch, splitted);
-	printf("DONE");
-}
 
 
 int main(int argc, char* argv[])
 {
-	/*WSADATA wsaData;
+	WSADATA wsaData;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
 	{
@@ -172,9 +161,7 @@ int main(int argc, char* argv[])
 	
 	int close_status = closesocket(s);
 	WSACleanup();
-	*/
-
-	test_1();
+	
 
 	return 0;
 	
