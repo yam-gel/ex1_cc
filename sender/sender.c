@@ -7,8 +7,9 @@
 #include <winsock2.h>
 #pragma comment (lib, "ws2_32.lib")
 
+//THIS IS MY FUCKING COMMENT
 
-
+//***********************************************************************
 //function : Adds hamming into each elemnet of the array
 //***********************************************************************
 void add_hamming(int* arr) {
