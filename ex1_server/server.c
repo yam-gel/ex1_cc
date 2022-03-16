@@ -11,27 +11,7 @@
 #define MAX_CLIENTS 2
 
 #pragma comment (lib, "ws2_32.lib")
-//*********************************************************************
-//Function : Recive 31bits int , and flip bit with n/635536 probabilty ######CHANGED TO BLOCK
-//*********************************************************************
-int num_after_rand_noise(int num, int seed, int n) {
-	int flip_mask = 1;
-	int num_noised=num;
-	int noise_prob = 0;
-	int count = 0;
-	srand(seed);
-	for (int i = 0; i < 31; i++) {
-		noise_prob = rand() % (65536/2);
-		//printf("%0d\n", noise_prob);
-		if (noise_prob <= (n/2)) {
-			num_noised ^= flip_mask;
-			printf("%0d\n", noise_prob);
-			count++;
-		}
-		flip_mask <<= 1;
-	}
-	printf("%0d", count);
-}
+
 //*********************************************************************
 // Function : flips bit with probablity of n/(2^16)
 //*********************************************************************
@@ -52,9 +32,52 @@ void add_random_noise(char *chunk,int seed, int n) {
 
 //*********************************************************************
 
+//*********************************************************************
+//Function : Recive 31bits int , and flip bit with n/635536 probabilty
+//*********************************************************************
+int num_after_rand_noise(int num, int seed, int n) {
+	int flip_mask = 1;
+	int num_noised = num;
+	int noise_prob = 0;
+	int count = 0;
+	srand(seed);
+	for (int i = 0; i < 31; i++) {
+		noise_prob = rand() % (65536 / 2);
+		//printf("%0d\n", noise_prob);
+		if (noise_prob <= (n / 2)) {
+			num_noised ^= flip_mask;
+			printf("%0d\n", noise_prob);
+			count++;
+		}
+		flip_mask <<= 1;
+	}
+	printf("%0d", count);
+}
+//*********************************************************************
+
+//*********************************************************************
+//Function : Recieve 31 Bytes of data and writes it to buffer
+//*********************************************************************
+void Write_to_buffer(SOCKET client, char* buffer)
+{
+	char buffer1[31];
+	int recieved = recv(client, buffer, 31, 0);
+
+	//while (recieved != 0)
+	//{
+	//	printf("recieved %d Bytes, %c\n", recieved, buffer[0]);
+	//	//buffer1 = buffer1+ recieved;
+	//	recieved = recv(client, buffer, 31, 0);
+	//}
+
+	//********* I am not sure if we need to add loop of recieve??????????
+}
+
+
+//*********************************************************************
 
 int main(int argc, char* argv[])
-{	
+{
 	WSADATA wsaData;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
@@ -62,7 +85,7 @@ int main(int argc, char* argv[])
 		printf("Error as WSAStartup()\n");
 		return -1;
 	}
-	
+
 	SOCKET s_sender = socket(AF_INET, SOCK_STREAM, 0);
 	SOCKET s_receiver = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -71,12 +94,12 @@ int main(int argc, char* argv[])
 
 	struct sockaddr_in sender_addr;
 	struct sockaddr_in reciever_addr;
-	
-	socklen_t add_len=256;
+
+	socklen_t add_len = 256;
 
 	//sender socket addres
 	char IP[200] = "127.0.0.1";
-	int port1 = 6342, port2=6343;
+	int port1 = 6342, port2 = 6343;
 
 	my_addr_s.sin_family = AF_INET;
 	my_addr_s.sin_addr.s_addr = inet_addr(IP);
@@ -93,13 +116,22 @@ int main(int argc, char* argv[])
 	printf("sender socket: %s port %d\n", IP, port1);
 	printf("receiver socket: %s port %d\n", IP, port2);
 	//char MSG[256];
-	int MSG=0;
-	//SOCKET client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
+	int MSG = 0;
+	SOCKET client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
+	/// START OF CHANGES TO TRY AND READ TO FILE
 	//int recieved = recv(client1, &MSG, sizeof(MSG), 0);
-	
+	char buffer[31];
+	Write_to_buffer(client1, buffer);
+
+	for (int i = 0; i < 31; i++)
+	{
+		printf("%c", buffer[i]);
+	}
+
 	//printf("%d %s\n",MSG, inet_ntoa(sender_addr.sin_addr));
-	
-	//reciever socket addresss
+	//END OF CHANGES
+
+	//reciever socket address
 	my_addr_r.sin_family = AF_INET;
 	my_addr_r.sin_addr.s_addr = inet_addr("127.0.0.1");
 	my_addr_r.sin_port = htons(port2);
@@ -113,23 +145,16 @@ int main(int argc, char* argv[])
 	}
 	//comment
 
-	//SOCKET client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
-	//int sent = send(client2, &MSG, sizeof(MSG), 0);
-	SOCKET client1;
-	SOCKET client2;
-	while (1) {
-		client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
-		int recieved = recv(client1, &MSG, sizeof(MSG), 0);
-		client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
-		int sent = send(client2, &MSG, sizeof(MSG), 0);
-	}
+	SOCKET client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
+	int sent = send(client2, &buffer, sizeof(buffer), 0);
+
 	int close_status = closesocket(s_sender);
 	close_status = closesocket(s_receiver);
 	close_status = closesocket(client1);
 	close_status = closesocket(client2);
-	
+
 	WSACleanup();
-	
+
 
 	return 0;
 }
