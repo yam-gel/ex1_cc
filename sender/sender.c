@@ -143,14 +143,18 @@ int file_reader(FILE* fp, SOCKET s) {
 	unsigned char batch[31];
 	int splitted[8] = { 0 };
 	int byte_sent_counter = 0;
+	for (int i = 0; i < 2; i++) {
+		fread(buffer, 1, sizeof(buffer), fp);
+		split_buffer(buffer, splitted, i);
+	}
 	while (!feof(fp)) {
+		add_hamming(splitted);
+		fill_batch(batch, splitted);
+		byte_sent_counter+=Send31Bytes(s, batch);
 		for (int i = 0; i < 2; i++) {
 			fread(buffer, 1, sizeof(buffer), fp);
 			split_buffer(buffer, splitted, i);
 		}
-		add_hamming(splitted);
-		fill_batch(batch, splitted);
-		byte_sent_counter+=Send31Bytes(s, batch);
 	}
 	return byte_sent_counter;
 }

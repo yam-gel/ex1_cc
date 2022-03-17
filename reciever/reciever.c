@@ -36,7 +36,6 @@ int decoder(int block)
 			error_index += pairities_index[i];
 		counter = 0;
 	}
-	printf("\n%d",error_index);
 	if (error_index != 0)
 	{
 		array_of_bits[error_index] ^= 1; //flip error bit
@@ -54,7 +53,6 @@ int decoder(int block)
 			power++;
 		}
 	}
-	printf("\n%d", result);
 	return(result);
 }
 
@@ -66,19 +64,21 @@ int Write_to_buffer(SOCKET client, char *buffer)
 	int splitted[8] = { 0 };
 	char* head = buffer;
 	int total_recieved=0, recieved = recv(client, buffer, 31, 0);
-	while (recieved != 0 && recieved<31)
+	while (recieved != 0 && recieved<=31)
 	{
 		total_recieved += recieved;
 		head += recieved;
+		if (recieved == 31) //It means we got a full block
+			break;
 		recieved = recv(client, head, sizeof(head), 0);
 	}
-
+	/*prints the recieved characters
 	for (int i = 0; i < 31; i++)
 	{
 		printf("%c ", buffer[i]);
-	}
+	}*/
 	if (total_recieved != 31)
-		printf("ERROR  %d Bytes were sent!!!", total_recieved);
+		printf("ERROR  %d Bytes recieved!!!", total_recieved);
 	return total_recieved;
 }
 
@@ -169,14 +169,53 @@ fill_2_write(char* batch, int* arr) {
 		//*(batch + i) = curr;
 	}
 }
-
-
 //********************************************************************
+
+//*******************************************************************************
+//function : Recieves a socket and writes to file all recieved data + prints number of recieved and wrote bytes
+//*******************************************************************************
+void one_file_reciever(SOCKET s)
+{
+	
+	char buffer[31];
+	int splitted[8] = { 0 };
+	unsigned char to_write[26];
+	FILE* fp = NULL;
+	fp = fopen("output.txt", "w");
+
+	//int splitted[8] = { 0 };
+	//char* head = buffer;
+	int total_recieved = 0, total_written = 0, recieved = 0;
+	recieved = recv(s, buffer, 31, 0);
+	while (recieved != 0)
+	{
+		total_recieved += recieved;
+		
+		split_chunk2numbers(splitted, buffer);
+		for (int i = 0; i < 8; i++) {
+			splitted[i] = decoder(splitted[i]);
+		}
+		fill_2_write(to_write, splitted);
+		/*printf("recieved message is: \n");
+		for (int i = 0; i < 26; i++)
+		{
+			printf("%c", to_write[i], i);
+		}
+		printf("\n");*/
+		fwrite(to_write, 1, sizeof(to_write), fp);
+		total_written += sizeof(to_write);
+		recieved = recv(s, buffer, sizeof(buffer), 0);
+	}
+	printf("received: %d bytes\n", total_recieved);
+	printf("wrote: %d bytes\n", total_written);
+	/// *******************************************
+}
+//********************************************************************
+
 int main(int argc, char* argv[])
 {
 
 	WSADATA wsaData;
-	int recieved_counter=0;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
 	{
@@ -204,26 +243,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	/// ****THIS IS TEMPORARY TO CHECK THE SENDING FUNC ///
-	char buffer[31];
-	int splitted[8] = { 0 };
-
-	unsigned char to_write[26];
-	FILE* fp = NULL;
-	fp = fopen("output.txt", "w");
-	recieved_counter += Write_to_buffer(s, buffer);
-	split_chunk2numbers(splitted, buffer);
-	for (int i = 0; i < 8; i++) {
-		splitted[i] = decoder(splitted[i]);
-	}
-	fill_2_write(to_write, splitted);
-	printf("recieved message is: \n");	
-	for (int i = 0; i < 26; i++)
-	{
-		printf("%c\n", to_write[i], i);
-	}
-	fwrite(to_write, 1, sizeof(to_write), fp);
-	/// *******************************************
+	one_file_reciever(s);
 
 	int close_status = closesocket(s);
 	WSACleanup();

@@ -17,41 +17,6 @@
 //*********************************************************************
 int add_deterministic_noise(char* buffer, int n)
 {
-	int remainder = 0, temp = n;
-	char* p = buffer;
-	unsigned char mask = 0x80;
-	for (int i = 0; i < 31; i++)
-	{
-		if (temp <= 8)
-		{
-			for (int j = 0; j < 8; j++)
-			{
-				temp--;
-				if (temp == 0)
-				{
-					*p = *p ^ mask;
-					temp = n;
-				}
-				mask >>= 1;
-			}
-			mask = 0x80;
-		}
-		else
-		{
-			temp -= 8;
-		}
-		p++;
-	}
-}
-//*********************************************************************
-
-
-
-//*********************************************************************
-//Function : Recive 31bytes buffer and flips any n'th bit in it, returns the remainer for next block
-//*********************************************************************
-int add_deterministic_noise(char* buffer, int n)
-{
 	int remainder = 0, temp=n;
 	char* p = buffer;
 	unsigned char mask = 0x80;
@@ -123,6 +88,34 @@ void Write_to_buffer(SOCKET client, char *buffer)
 
 //*********************************************************************
 
+//*********************************************************************
+//Function : Gets sender socket and recever socket and transfer the data
+//*********************************************************************
+int recieve_and_send(SOCKET sender, SOCKET reciever)
+{
+	
+	char buffer[31];
+	int recieved = recv(sender, buffer, 31, 0);
+	int sent = 0;//send(reciever, &buffer, sizeof(buffer), 0);
+	int retransmitted = 0;
+	while (recieved != 0)
+	{
+		for (int i = 0; i < 31; i++)
+		{
+			printf("%c", buffer[i]);
+		}
+		//add noise here
+		sent= send(reciever, &buffer, sizeof(buffer), 0);
+		if (recieved == sent)
+			retransmitted += recieved;
+		printf("%d\n", recieved);
+		recieved = recv(sender, buffer, 31, 0);
+	}
+	printf("retransmitted %d bytes", retransmitted);
+	return retransmitted;
+}
+//*********************************************************************
+
 int main(int argc, char* argv[])
 {	
 
@@ -167,18 +160,7 @@ int main(int argc, char* argv[])
 	//char MSG[256];
 	int MSG=0;
 	SOCKET client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
-	/// START OF CHANGES TO TRY AND READ TO FILE
-	//int recieved = recv(client1, &MSG, sizeof(MSG), 0);
-	char buffer[31];
-	Write_to_buffer(client1, buffer);
-
-	for (int i = 0; i < 31; i++)
-	{
-		printf("%c", buffer[i]);
-	}
-
-	//printf("%d %s\n",MSG, inet_ntoa(sender_addr.sin_addr));
-	//END OF CHANGES
+	
 	
 	//reciever socket address
 	my_addr_r.sin_family = AF_INET;
@@ -195,8 +177,9 @@ int main(int argc, char* argv[])
 	//comment
 
 	SOCKET client2 = accept(s_receiver, (SOCKADDR*)&reciever_addr, &add_len);
-	int sent = send(client2, &buffer, sizeof(buffer), 0);
 	
+	recieve_and_send(client1, client2);
+
 	int close_status = closesocket(s_sender);
 	close_status = closesocket(s_receiver);
 	close_status = closesocket(client1);
