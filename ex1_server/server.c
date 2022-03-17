@@ -46,27 +46,41 @@ int add_deterministic_noise(char* buffer, int n)
 //*********************************************************************
 
 
+
 //*********************************************************************
-//Function : Recive 31bits int , and flip bit with n/635536 probabilty
+//Function : Recive 31bytes buffer and flips any n'th bit in it, returns the remainer for next block
 //*********************************************************************
-int num_after_rand_noise(int num, int seed, int n) {
-	int flip_mask = 1;
-	int num_noised=num;
-	int noise_prob = 0;
-	int count = 0;
-	srand(seed);
-	for (int i = 0; i < 31; i++) {
-		noise_prob = rand() % (65536/2);
-		//printf("%0d\n", noise_prob);
-		if (noise_prob <= (n/2)) {
-			num_noised ^= flip_mask;
-			printf("%0d\n", noise_prob);
-			count++;
+int add_deterministic_noise(char* buffer, int n)
+{
+	int remainder = 0, temp=n;
+	char* p = buffer;
+	unsigned char mask = 0x80;
+	for (int i = 0; i < 31; i++)
+	{
+		if (temp <= 8)
+		{
+			for (int j=0; j<8; j++)
+			{
+				temp--;
+				if (temp == 0)
+				{
+					*p = *p ^ mask;
+					temp = n;
+				}
+				mask >>= 1;
+			}
+			mask = 0x80;
 		}
-		flip_mask <<= 1;
+		else
+		{
+			temp -= 8;
+		}
+		p++;
 	}
-	printf("%0d", count);
 }
+//*********************************************************************
+
+
 //*********************************************************************
 
 //*********************************************************************
@@ -111,6 +125,8 @@ void Write_to_buffer(SOCKET client, char *buffer)
 
 int main(int argc, char* argv[])
 {	
+
+
 	WSADATA wsaData;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
