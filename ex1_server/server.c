@@ -13,7 +13,7 @@
 #pragma comment (lib, "ws2_32.lib")
 
 //*********************************************************************
-//Function : Recive 31bytes buffer and flips any n'th bit in it, returns the remainer for next block
+//Function : Recive 31bytes buffer and flips any n'th bit in it, returns the remainder for next block
 //*********************************************************************
 int add_deterministic_noise(char* buffer, int n)
 {
@@ -64,25 +64,6 @@ void add_random_noise(char* chunk, int seed, int n) {
 			}
 		}
 	}
-}
-
-
-//*********************************************************************
-//Function : Recieve 31 Bytes of data and writes it to buffer
-//*********************************************************************
-void Write_to_buffer(SOCKET client, char *buffer)
-{
-	char buffer1[31];
-	int recieved = recv(client, buffer, 31, 0);
-	
-	//while (recieved != 0)
-	//{
-	//	printf("recieved %d Bytes, %c\n", recieved, buffer[0]);
-	//	//buffer1 = buffer1+ recieved;
-	//	recieved = recv(client, buffer, 31, 0);
-	//}
-
-	//********* I am not sure if we need to add loop of recieve??????????
 }
 
 
@@ -146,6 +127,7 @@ int main(int argc, char* argv[])
 	my_addr_s.sin_family = AF_INET;
 	my_addr_s.sin_addr.s_addr = inet_addr(IP);
 	my_addr_s.sin_port = htons(port1);
+	//printf(my_addr_s.sin_port);
 	int connect_status = bind(s_sender, (SOCKADDR*)&my_addr_s, sizeof(my_addr_s));
 	connect_status = listen(s_sender, MAX_CLIENTS);
 	//check connection success
@@ -154,13 +136,11 @@ int main(int argc, char* argv[])
 		printf("connection failed");
 		return -1;
 	}
-
 	printf("sender socket: %s port %d\n", IP, port1);
 	printf("receiver socket: %s port %d\n", IP, port2);
 	//char MSG[256];
 	int MSG=0;
 	SOCKET client1 = accept(s_sender, (SOCKADDR*)&sender_addr, &add_len);
-	
 	
 	//reciever socket address
 	my_addr_r.sin_family = AF_INET;
