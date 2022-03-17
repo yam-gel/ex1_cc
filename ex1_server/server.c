@@ -11,6 +11,41 @@
 #define MAX_CLIENTS 2
 
 #pragma comment (lib, "ws2_32.lib")
+
+//*********************************************************************
+//Function : Recive 31bytes buffer and flips any n'th bit in it, returns the remainer for next block
+//*********************************************************************
+int add_deterministic_noise(char* buffer, int n)
+{
+	int remainder = 0, temp = n;
+	char* p = buffer;
+	unsigned char mask = 0x80;
+	for (int i = 0; i < 31; i++)
+	{
+		if (temp <= 8)
+		{
+			for (int j = 0; j < 8; j++)
+			{
+				temp--;
+				if (temp == 0)
+				{
+					*p = *p ^ mask;
+					temp = n;
+				}
+				mask >>= 1;
+			}
+			mask = 0x80;
+		}
+		else
+		{
+			temp -= 8;
+		}
+		p++;
+	}
+}
+//*********************************************************************
+
+
 //*********************************************************************
 //Function : Recive 31bits int , and flip bit with n/635536 probabilty
 //*********************************************************************
