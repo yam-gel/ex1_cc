@@ -15,9 +15,10 @@
 //*********************************************************************
 //Function : Recive 31bytes buffer and flips any n'th bit in it, returns the remainder for next block
 //*********************************************************************
-int add_deterministic_noise(char* buffer, int n)
+int add_deterministic_noise(char* buffer, int n, int remainder)
 {
-	int remainder = 0, temp=n;
+
+	int temp=remainder;
 	char* p = buffer;
 	unsigned char mask = 0x80;
 	for (int i = 0; i < 31; i++)
@@ -37,11 +38,13 @@ int add_deterministic_noise(char* buffer, int n)
 			mask = 0x80;
 		}
 		else
-		{
 			temp -= 8;
-		}
 		p++;
 	}
+	for (int i = 0; i < 31; i++)
+		printf("%c", buffer[i]);
+	printf("\n");
+	return temp;
 }
 //*********************************************************************
 
@@ -78,14 +81,16 @@ int recieve_and_send(SOCKET sender, SOCKET reciever)
 	char buffer[31];
 	int recieved = recv(sender, buffer, 31, 0);
 	int sent = 0;//send(reciever, &buffer, sizeof(buffer), 0);
-	int retransmitted = 0;
+	int retransmitted = 0, remainder_for_next_block=31;
 	while (recieved != 0)
 	{
 		for (int i = 0; i < 31; i++)
 		{
 			printf("%c", buffer[i]);
 		}
-		//add noise here
+		//This is adding deterministic noise, remainder is the remmainder of bits to count before fliping bit in next block
+		remainder_for_next_block = add_deterministic_noise(buffer, 3, remainder_for_next_block);
+		//
 		sent= send(reciever, &buffer, sizeof(buffer), 0);
 		if (recieved == sent)
 			retransmitted += recieved;
@@ -100,7 +105,7 @@ int recieve_and_send(SOCKET sender, SOCKET reciever)
 int main(int argc, char* argv[])
 {	
 
-
+	
 	WSADATA wsaData;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
@@ -166,7 +171,13 @@ int main(int argc, char* argv[])
 	close_status = closesocket(client2);
 	
 	WSACleanup();
-	
+	/*unsigned char buffer[31]={'1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'};
+
+	int check=add_deterministic_noise(buffer, 16, 7);
+	for (int i = 0; i < 31; i++)
+	{
+		printf("%c", buffer[i]);
+	}*/
 
 	return 0;
 }

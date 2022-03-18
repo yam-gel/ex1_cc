@@ -9,7 +9,7 @@
 #pragma comment (lib, "ws2_32.lib")
 
 // ***********************************************************************************************
-//This functions input is encoded block, the function returns the decoded block in 26 LSBs of int 
+//This functions input is encoded block, the function returns the decoded block in 26 LSBs of int ***IF there was error correction it will be represented in 27th bit, see below
 // ***********************************************************************************************
 
 int decoder(int block)
@@ -37,12 +37,9 @@ int decoder(int block)
 		counter = 0;
 	}
 	if (error_index != 0)
-	{
 		array_of_bits[error_index] ^= 1; //flip error bit
-		printf("error detected in bit number %d", error_index);
-	}
-	//build array of 31 bits
-	int marker = 1, power = 0, result=0;
+	//rebuild int of block after correction, in 26 LSBs of result
+	unsigned int marker = 1, power = 0, result=0;
 	for (int i = 1; i < 32; i++)
 	{
 		if (i == marker)
@@ -53,7 +50,10 @@ int decoder(int block)
 			power++;
 		}
 	}
-	return(result);
+	//If there was error correction in the block the 27th bit of result will be 1
+	if (error_index != 0)
+		result ^= 1 << 26;
+	return (result);
 }
 
 //*********************************************************************
@@ -178,7 +178,7 @@ void one_file_reciever(SOCKET s)
 {
 	
 	char buffer[31];
-	int splitted[8] = { 0 };
+	int splitted[8] = { 0 }, errors_corrected=0;
 	unsigned char to_write[26];
 	FILE* fp = NULL;
 	fp = fopen("output.txt", "w");
@@ -194,6 +194,12 @@ void one_file_reciever(SOCKET s)
 		split_chunk2numbers(splitted, buffer);
 		for (int i = 0; i < 8; i++) {
 			splitted[i] = decoder(splitted[i]);
+			// This is decdode of was correction or not in a block
+			if (splitted[i] & (1 << 26))
+			{
+				splitted[i] ^= (1 << 26);
+				errors_corrected += 1;
+			}
 		}
 		fill_2_write(to_write, splitted);
 		/*printf("recieved message is: \n");
@@ -208,6 +214,7 @@ void one_file_reciever(SOCKET s)
 	}
 	printf("received: %d bytes\n", total_recieved);
 	printf("wrote: %d bytes\n", total_written);
+	printf("corrected: %d errors\n", errors_corrected);
 	/// *******************************************
 }
 //********************************************************************
