@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
 	scanf("%s", file_name);
 	while (strcmp(file_name, "quit") != 0)
 	{
-		fp = fopen(file_name, "w");
+		fp = fopen(file_name, "wb");
 		if (fp == NULL)
 			fprintf(stderr, "ERROR can't open file");
 		one_file_reciever(s, fp);

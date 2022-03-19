@@ -141,6 +141,7 @@ int file_reader(FILE* fp, SOCKET s, int *read_counter) {
 	unsigned char batch[31];
 	int splitted[8] = { 0 };
 	int byte_sent_counter = 0;
+	int break_flag = 0;
 	for (int i = 0; i < 2; i++) {
 		fread(buffer, 1, sizeof(buffer), fp);
 		*read_counter += 13;
@@ -199,7 +200,7 @@ int main(int argc, char* argv[])
 	scanf("%s", file_name);
 	while (strcmp(file_name, "quit") != 0)
 	{
-		fp = fopen(file_name, "r");
+		fp = fopen(file_name, "rb");
 		if (fp==NULL)
 			fprintf(stderr, "ERROR can't open file");
 		sent_counter = file_reader(fp, s, read_p);
