@@ -143,7 +143,7 @@ int file_reader(FILE* fp, SOCKET s, int *read_counter) {
 	int byte_sent_counter = 0;
 	for (int i = 0; i < 2; i++) {
 		fread(buffer, 1, sizeof(buffer), fp);
-		*read_counter += 26;
+		*read_counter += 13;
 		split_buffer(buffer, splitted, i);
 	}
 	while (!feof(fp)) {
@@ -152,7 +152,7 @@ int file_reader(FILE* fp, SOCKET s, int *read_counter) {
 		byte_sent_counter+=Send31Bytes(s, batch);
 		for (int i = 0; i < 2; i++) {
 			fread(buffer, 1, sizeof(buffer), fp);
-			* read_counter += 26;
+			*read_counter += 13;
 			split_buffer(buffer, splitted, i);
 		}
 	}
@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
 		sent_counter = file_reader(fp, s, read_p);
 		if (sent_counter == -1)
 			return -1;
-		printf("file length: %d bytes\n", read_counter);
+		printf("file length: %d bytes\n", sent_counter*26/31); //*** can we use read_counter here??? TODO
 		read_counter = 0;
 		printf("sent: %d bytes\n", sent_counter);
 

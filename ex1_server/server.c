@@ -127,12 +127,10 @@ int main(int argc, char* argv[])
 	socklen_t add_len=256;
 
 	//sender socket addres
-	char IP[200] = "127.0.0.1";
-	int port1 = 6342, port2=6343;
-
+	
 	my_addr_s.sin_family = AF_INET;
-	my_addr_s.sin_addr.s_addr = inet_addr(IP);
-	my_addr_s.sin_port = htons(port1);
+	my_addr_s.sin_addr.s_addr = INADDR_ANY;
+	my_addr_s.sin_port = 0;
 	int connect_status = bind(s_sender, (SOCKADDR*)&my_addr_s, sizeof(my_addr_s));
 	connect_status = listen(s_sender, MAX_CLIENTS);
 	//check connection success
@@ -141,14 +139,14 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "connection failed\n");
 		return -1;
 	}
-	printf("sender socket: IP address = %s port = %d\n", IP, port1);
-	printf("receiver socket: IP address = %s port = %d\n", IP, port2);
 	
+	getsockname(s_sender, (struct sockaddr*)&my_addr_s, &add_len);
+	printf("sender socket: IP address = %s port = %d\n", inet_ntoa(my_addr_s.sin_addr), ntohs(my_addr_s.sin_port));
 	
 	//reciever socket address
 	my_addr_r.sin_family = AF_INET;
-	my_addr_r.sin_addr.s_addr = inet_addr("127.0.0.1");
-	my_addr_r.sin_port = htons(port2);
+	my_addr_r.sin_addr.s_addr = INADDR_ANY;
+	my_addr_r.sin_port = 0;
 	connect_status = bind(s_receiver, (SOCKADDR*)&my_addr_r, sizeof(my_addr_r));
 	connect_status = listen(s_receiver, MAX_CLIENTS);
 	//check connection success
@@ -157,7 +155,8 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "connection failed 2");
 		return -1;
 	}
-
+	getsockname(s_receiver, (struct sockaddr*)&my_addr_r, &add_len);
+	printf("receiver socket: IP address = %s port = %d\n", inet_ntoa(my_addr_r.sin_addr), ntohs(my_addr_r.sin_port));
 
 	//comment
 	SOCKET client1, client2;
