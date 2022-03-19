@@ -121,15 +121,13 @@ void split_buffer(unsigned char* buffer, int* arr, int half) {
 int Send31Bytes(SOCKET s, char *buffer)
 {
 	int sent_total = send(s, buffer, 31, 0); //add define for 31?
-	
-	if (sent_total!=31)
-		printf("ERROR only %d Bytes were sent!!!\n", sent_total);
-	printf("%d Bytes sent successfully\n", sent_total);
-	printf("sent message was: \n");
-	for (int i = 0; i < 31; i++)
+	if (sent_total == -1)
 	{
-		printf("%c", buffer[i]);
-	}
+		fprintf(stderr, "failed to send\n");
+		return -1;
+	}	
+	if (sent_total!=31)
+		fprintf(stderr, "ERROR only %d Bytes were sent!!!\n", sent_total);
 	return sent_total;
 
 }
@@ -138,13 +136,14 @@ int Send31Bytes(SOCKET s, char *buffer)
 //*******************************************************************************
 //function : Reads file in 13bytes chunks, splits, code to hamming,and sends it 
 //*******************************************************************************
-int file_reader(FILE* fp, SOCKET s) {
+int file_reader(FILE* fp, SOCKET s, int *read_counter) {
 	unsigned char buffer[13];
 	unsigned char batch[31];
 	int splitted[8] = { 0 };
 	int byte_sent_counter = 0;
 	for (int i = 0; i < 2; i++) {
 		fread(buffer, 1, sizeof(buffer), fp);
+		*read_counter += 26;
 		split_buffer(buffer, splitted, i);
 	}
 	while (!feof(fp)) {
@@ -153,34 +152,22 @@ int file_reader(FILE* fp, SOCKET s) {
 		byte_sent_counter+=Send31Bytes(s, batch);
 		for (int i = 0; i < 2; i++) {
 			fread(buffer, 1, sizeof(buffer), fp);
+			* read_counter += 26;
 			split_buffer(buffer, splitted, i);
 		}
 	}
 	return byte_sent_counter;
 }
 
-//*******************************************************************************
-//function : TEST 1 BATCH 
-//*******************************************************************************
-void test_1() {
-	int splitted[8] = { 1,1,1,1,1,1,1,1 };
-	//int try_0[8] = {0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff,0x7fffffff};
-	unsigned char batch[31];
-	add_hamming(splitted);
-	fill_batch(batch, splitted);
-	printf("DONE");
-}
-//*******************************************************************************
 
 int main(int argc, char* argv[])
 {
-	
 	WSADATA wsaData;
-	int sent_counter = 0;
+	int sent_counter = 0, close_status;
 	int init_result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (init_result != NO_ERROR)
 	{
-		printf("Error as WSAStartup()\n");
+		fprintf(stderr, "Error as WSAStartup()\n");
 		return -1;
 	}
 
@@ -200,20 +187,47 @@ int main(int argc, char* argv[])
 	//check connection success
 	if (connect_status == -1)
 	{
-		printf("connection failed");
+		fprintf(stderr, "connection failed");
 		return -1;
 	}
 
 	FILE* fp = NULL;
-	fp = fopen("my_file1.txt", "r");
-	sent_counter = file_reader(fp,s);
+	char file_name[100];
+	int read_counter = 0;
+	int* read_p = &read_counter;
+	printf("enter file name:\n");
+	scanf("%s", file_name);
+	while (strcmp(file_name, "quit") != 0)
+	{
+		fp = fopen(file_name, "r");
+		if (fp==NULL)
+			fprintf(stderr, "ERROR can't open file");
+		sent_counter = file_reader(fp, s, read_p);
+		if (sent_counter == -1)
+			return -1;
+		printf("file length: %d bytes\n", read_counter);
+		read_counter = 0;
+		printf("sent: %d bytes\n", sent_counter);
+
+		close_status = closesocket(s);
+
+		s = socket(AF_INET, SOCK_STREAM, 0);
+		connect_status = connect(s, (SOCKADDR*)&remote_addr, sizeof(remote_addr));
+		//check connection success
+		if (connect_status == -1)
+		{
+			fprintf(stderr, "connection failed");
+			return -1;
+		}
+
+		printf("enter file name:\n");
+		scanf("%s", file_name);
+	}
 	/// *******************************************
 	
-	int close_status = closesocket(s);
 	WSACleanup();
 
 	return 0;
 	
-	test_1();
-
+	
 }

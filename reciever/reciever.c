@@ -174,17 +174,14 @@ fill_2_write(char* batch, int* arr) {
 //*******************************************************************************
 //function : Recieves a socket and writes to file all recieved data + prints number of recieved and wrote bytes
 //*******************************************************************************
-void one_file_reciever(SOCKET s)
+void one_file_reciever(SOCKET s, FILE *fp)
 {
 	
 	char buffer[31];
 	int splitted[8] = { 0 }, errors_corrected=0;
 	unsigned char to_write[26];
-	FILE* fp = NULL;
-	fp = fopen("output.txt", "w");
 
-	//int splitted[8] = { 0 };
-	//char* head = buffer;
+	
 	int total_recieved = 0, total_written = 0, recieved = 0;
 	recieved = recv(s, buffer, 31, 0);
 	while (recieved != 0)
@@ -202,12 +199,6 @@ void one_file_reciever(SOCKET s)
 			}
 		}
 		fill_2_write(to_write, splitted);
-		/*printf("recieved message is: \n");
-		for (int i = 0; i < 26; i++)
-		{
-			printf("%c", to_write[i], i);
-		}
-		printf("\n");*/
 		fwrite(to_write, 1, sizeof(to_write), fp);
 		total_written += sizeof(to_write);
 		recieved = recv(s, buffer, sizeof(buffer), 0);
@@ -215,6 +206,7 @@ void one_file_reciever(SOCKET s)
 	printf("received: %d bytes\n", total_recieved);
 	printf("wrote: %d bytes\n", total_written);
 	printf("corrected: %d errors\n", errors_corrected);
+	fclose(fp);
 	/// *******************************************
 }
 //********************************************************************
@@ -250,21 +242,34 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	one_file_reciever(s);
+	FILE* fp = NULL;
+	char file_name[100];
+	int close_status;
+	printf("enter file name:\n");
+	scanf("%s", file_name);
+	while (strcmp(file_name, "quit") != 0)
+	{
+		fp = fopen(file_name, "w");
+		if (fp == NULL)
+			fprintf(stderr, "ERROR can't open file");
+		one_file_reciever(s, fp);
 
-	int close_status = closesocket(s);
-	WSACleanup();
-	return 0;
-	
-	
-	/*unsigned char check[31] = {0,0,0,0,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
-	unsigned char check2[31] = { 0,0,0,14,0,0,0,28,0,0,0,56,0,0,0,112,0,0,0,224,0,0,1,192,0,0,3,128,0,0,7 };
-	unsigned int splitted[8] = { 0 };
-	split_chunk2numbers(splitted,check2);
-	for (int i = 0; i < 8; i++) {
-		splitted[i] = decoder(splitted[i]);
+		close_status = closesocket(s);
+
+
+		s = socket(AF_INET, SOCK_STREAM, 0);
+		connect_status = connect(s, (SOCKADDR*)&remote_addr, sizeof(remote_addr));
+		//check connection success
+		if (connect_status == -1)
+		{
+			fprintf(stderr, "connection failed");
+			return -1;
+		}
+
+		printf("enter file name:\n");
+		scanf("%s", file_name);
 	}
-	unsigned char try26[26] = { 0 };
-	fill_2_write(try26, splitted);*/
+
+	WSACleanup();
 	return 0;
 }
