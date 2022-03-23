@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 	//check connection success
 	if (connect_status == -1)
 	{
-		printf("connection failed");
+		fprintf(stderr,"connection failed");
 		return -1;
 	}
 
@@ -251,7 +251,10 @@ int main(int argc, char* argv[])
 	{
 		fp = fopen(file_name, "wb");
 		if (fp == NULL)
+		{
 			fprintf(stderr, "ERROR can't open file");
+			return - 1;
+		}
 		one_file_reciever(s, fp);
 
 		close_status = closesocket(s);

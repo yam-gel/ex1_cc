@@ -7,8 +7,6 @@
 #include <winsock2.h>
 #pragma comment (lib, "ws2_32.lib")
 
-//THIS IS MY FUCKING COMMENT
-
 //***********************************************************************
 //function : Adds hamming into each elemnet of the array
 //***********************************************************************
@@ -201,8 +199,11 @@ int main(int argc, char* argv[])
 	while (strcmp(file_name, "quit") != 0)
 	{
 		fp = fopen(file_name, "rb");
-		if (fp==NULL)
+		if (fp == NULL)
+		{
 			fprintf(stderr, "ERROR can't open file");
+			return -1;
+		}
 		sent_counter = file_reader(fp, s, read_p);
 		if (sent_counter == -1)
 			return -1;
